@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminAuthController;
+use App\Http\Controllers\Seller\SellerAuthController;
+use App\Http\Controllers\Seller\SellerProductController;
 use App\Http\Controllers\User\UserAuthController;
 use App\Http\Controllers\User\UserProductController;
 use App\Http\Controllers\User\VerificationController;
@@ -21,3 +24,27 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 Route::group(['middleware' => ['auth:sanctum', 'email.verified']], function () {
     Route::get('/products', [UserProductController::class, 'getAllProducts']);
 });
+
+
+
+
+
+
+//Seller
+Route::post('/seller/register', [SellerAuthController::class, 'register']);
+Route::post('/seller/login', [SellerAuthController::class, 'login']);
+
+Route::group(['middleware' => ['auth:sanctum']], function () {
+    Route::post('/seller/verification_token/request', [SellerAuthController::class, 'requestVerificationToken']);
+    Route::post('/seller/email/verify', [SellerAuthController::class, 'verifyEmail']);
+});
+
+Route::group(['middleware' => ['auth:sanctum', 'email.verified']], function () {
+    Route::get('/products', [SellerProductController::class, 'getAllProducts']);
+});
+
+
+
+
+//Admin
+Route::post('/admin/login', [AdminAuthController::class, 'login']);
