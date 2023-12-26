@@ -7,6 +7,7 @@ use App\Http\Requests\Seller\SellerEmailVerifyRequest;
 use App\Http\Requests\Seller\SellerLoginRequest;
 use App\Http\Requests\Seller\SellerRegisterRequest;
 use App\Models\Seller;
+use App\Models\SellerAddress;
 use App\Traits\ResponseTrait;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -21,6 +22,8 @@ class SellerAuthController extends Controller
 
     public function register(SellerRegisterRequest $request)
     {
+
+        // return $request->all();
         DB::beginTransaction();
         try {
             $verification_token = random_int(100000, 999999);
@@ -29,6 +32,16 @@ class SellerAuthController extends Controller
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'verification_token' => $verification_token,
+                'shop_name' => $request->shop_name,
+            ]);
+
+            SellerAddress::create([
+                'seller_id' => $seller->id,
+                'street' => $request->street,
+                'city' => $request->city,
+                'state' => $request->state,
+                'country' => $request->country,
+                'postal_code' => $request->postal_code,
             ]);
 
             $data = [

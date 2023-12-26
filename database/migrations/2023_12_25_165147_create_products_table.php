@@ -24,6 +24,7 @@ return new class extends Migration
             $table->unsignedBigInteger('brand_id')->nullable();
             $table->boolean('is_featured')->default(false);
             $table->boolean('is_active')->default(true);
+            $table->string('tags')->nullable();
             $table->timestamps();
 
             $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');

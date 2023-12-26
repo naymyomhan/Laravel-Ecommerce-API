@@ -46,5 +46,7 @@ Route::group(['middleware' => ['auth:sanctum', 'email.verified']], function () {
 
 
 
+
+
 //Admin
 Route::post('/admin/login', [AdminAuthController::class, 'login']);

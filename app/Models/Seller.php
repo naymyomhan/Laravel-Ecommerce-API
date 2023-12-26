@@ -22,6 +22,7 @@ class Seller extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
+        'shop_name',
     ];
 
     /**

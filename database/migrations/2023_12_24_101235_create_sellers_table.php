@@ -15,6 +15,12 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('password');
+
+            $table->string('phone')->nullable();
+            $table->string('shop_name');
+            $table->string('logo')->nullable();
+            $table->text('description')->nullable();
 
             $table->timestamp('token_request_at')->nullable();
             $table->integer('token_request_count')->default(0);
@@ -25,7 +31,6 @@ return new class extends Migration
             $table->string('verification_token')->nullable();
             $table->timestamp('email_verified_at')->nullable();
 
-            $table->string('password');
             $table->rememberToken();
             $table->timestamps();
         });
