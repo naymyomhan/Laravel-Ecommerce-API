@@ -24,10 +24,7 @@ class EmailVerified
         }
 
         if (Auth::user()->email_verified_at == null || Auth::user()->email_verified_at == "") {
-            $data = [
-                "verified" => false,
-            ];
-            return $this->success("Email is not verified", $data, 403);
+            return $this->success("Email is not verified", null, 200, false);
         }
 
         return $next($request);

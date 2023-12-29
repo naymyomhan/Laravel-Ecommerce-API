@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Seller\SellerEmailVerifyRequest;
 use App\Http\Requests\Seller\SellerLoginRequest;
 use App\Http\Requests\Seller\SellerRegisterRequest;
+use App\Mail\VerifyMail;
 use App\Models\Seller;
 use App\Models\SellerAddress;
 use App\Traits\ResponseTrait;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SellerAuthController extends Controller
 {
@@ -22,36 +25,26 @@ class SellerAuthController extends Controller
 
     public function register(SellerRegisterRequest $request)
     {
-
-        // return $request->all();
         DB::beginTransaction();
         try {
             $verification_token = random_int(100000, 999999);
+
             $seller = Seller::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'verification_token' => $verification_token,
-                'shop_name' => $request->shop_name,
-            ]);
-
-            SellerAddress::create([
-                'seller_id' => $seller->id,
-                'street' => $request->street,
-                'city' => $request->city,
-                'state' => $request->state,
-                'country' => $request->country,
-                'postal_code' => $request->postal_code,
             ]);
 
             $data = [
-                'token' => $seller->createToken("SELLER-TOKEN")->plainTextToken,
+                'token' => $seller->createToken("seller-token")->plainTextToken,
             ];
             DB::commit();
-            return $this->success('Seller register successful', $data);
+            return $this->success('Seller register successful', $data, 200, false);
         } catch (\Throwable $th) {
             DB::rollBack();
-            return $this->fail("Server Error : " . $th);
+            Log::error('SellerAuthController : register() :' . $th->getMessage());
+            return $this->fail("Something went wrong", 500);
         }
     }
 
@@ -60,32 +53,31 @@ class SellerAuthController extends Controller
         DB::beginTransaction();
         try {
             $seller = Seller::where('email', $request->email)->first();
-            if (!$seller) {
+
+            if (!$seller || !Hash::check($request->password, $seller->password)) {
                 return $this->fail("Email or password is not correct", 401);
             }
 
-            if (!Auth::guard('seller')->attempt($request->only(['email', 'password']))) {
-                return $this->fail("Email or password is not correct", 401);
-            }
+            $data = [
+                'token' => $seller->createToken("seller-token")->plainTextToken,
+            ];
+            DB::commit();
 
             if ($seller->email_verified_at == null || $seller->email_verified_at == "") {
-                $data = [
-                    'token' => $seller->createToken("SELLER-TOKEN")->plainTextToken,
-                    'verified' => false
-                ];
+                return $this->success('Seller login successful', $data, 200, false);
             } else {
-                $data = [
-                    'token' => $seller->createToken("SELLER-TOKEN")->plainTextToken,
-                    'verified' => true
-                ];
+                return $this->success('Seller login successful', $data, 200, true);
             }
-            DB::commit();
-            return $this->success('Seller register successful', $data);
+
+
+            return $this->success('Seller login successful', $data, 200, false);
         } catch (\Throwable $th) {
             DB::rollBack();
-            return $this->fail("Server Error : " . $th);
+            Log::error('SellerAuthController : login() :' . $th->getMessage());
+            return $this->fail("Something went wrong", 500);
         }
     }
+
 
     public function requestVerificationToken()
     {
@@ -117,17 +109,24 @@ class SellerAuthController extends Controller
                 }
             }
 
-            $random_otp = random_int(100000, 999999);
-            $seller->verification_token = Crypt::encryptString($random_otp);
+            $verification_token = random_int(100000, 999999);
+            $seller->verification_token = Crypt::encryptString($verification_token);
             $seller->token_request_at = Carbon::now();
             /** @var \App\Models\Seller $seller **/
             $seller->increment('token_request_count', 1);
             $seller->save();
+
+
+            //TODO::Send email
+            Mail::to($seller->email)->send(new VerifyMail($verification_token));
+
+
             DB::commit();
-            return $this->success("Send OTP successful", $random_otp); //TODO::remove code
+            return $this->success("Send OTP successful", $verification_token, 200, false); //TODO::remove code
         } catch (\Throwable $th) {
             DB::rollBack();
-            return $this->fail($th->getMessage() ? $th->getMessage() : "server error", 500);
+            Log::error('SellerAuthController : requestVerificationToken() :' . $th->getMessage());
+            return $this->fail("Something went wrong", 500);
         }
     }
 
@@ -176,13 +175,13 @@ class SellerAuthController extends Controller
                 $seller->verify_attempt_at = null;
                 $seller->verify_attempt_count = 0;
                 $seller->save();
-                $data = ["verified" => true];
                 DB::commit();
-                return $this->success("Verify email successful", $data);
+                return $this->success("Verify email successful");
             }
         } catch (\Throwable $th) {
             DB::rollBack();
-            return $this->fail("Server Error : " . $th);
+            Log::error('SellerAuthController : verifyEmail() :' . $th->getMessage());
+            return $this->fail("Something went wrong", 500);
         }
     }
 }

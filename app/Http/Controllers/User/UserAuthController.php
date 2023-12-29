@@ -32,10 +32,8 @@ class UserAuthController extends Controller
                 'verification_token' => $verification_token,
             ]);
 
-            // $user->save();
-
             $data = [
-                'token' => $user->createToken("USER-TOKEN")->plainTextToken,
+                'token' => $user->createToken("user-token")->plainTextToken,
             ];
             DB::commit();
             return $this->success('User register successful', $data);
@@ -50,22 +48,18 @@ class UserAuthController extends Controller
         DB::beginTransaction();
         try {
             $user = User::where('email', $request->email)->first();
-            if (!$user) {
-                return $this->fail("Email or password is not correct", 401);
-            }
-
-            if (!Auth::guard('user')->attempt($request->only(['email', 'password']))) {
+            if (!$user || !Hash::check($request->password, $user->password)) {
                 return $this->fail("Email or password is not correct", 401);
             }
 
             if ($user->email_verified_at == null || $user->email_verified_at == "") {
                 $data = [
-                    'token' => $user->createToken("USER-TOKEN")->plainTextToken,
+                    'token' => $user->createToken("user-token")->plainTextToken,
                     'verified' => false
                 ];
             } else {
                 $data = [
-                    'token' => $user->createToken("USER-TOKEN")->plainTextToken,
+                    'token' => $user->createToken("user-token")->plainTextToken,
                     'verified' => true
                 ];
             }

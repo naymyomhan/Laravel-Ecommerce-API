@@ -1,37 +1,16 @@
 <?php
 
-namespace App\Http\Controllers\Seller;
+namespace App\Http\Controllers\Common;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Seller\CreateProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use App\Traits\ResponseTrait;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
-class SellerProductController extends Controller
+class ProductController extends Controller
 {
     use ResponseTrait;
-
-    public function createProduct(CreateProductRequest $request)
-    {
-        DB::beginTransaction();
-        try {
-            $validatedData = $request->validated();
-            $validatedData['seller_id'] = Auth::id();
-            $new_product = Product::create($validatedData);
-            DB::commit();
-            return $this->success("Create new product successful", $new_product);
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            Log::error('SellerProductController : createProduct() :' . $th->getMessage());
-            return $this->fail("Something went wrong", 500);
-        }
-    }
-
 
     public function getAllProducts(Request $request)
     {

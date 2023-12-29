@@ -42,17 +42,17 @@ return [
         ],
 
         'user' => [
-            'driver' => 'session',
+            'driver' => 'sanctum',
             'provider' => 'users',
         ],
 
         'seller' => [
-            'driver' => 'session',
+            'driver' => 'sanctum',
             'provider' => 'sellers',
         ],
 
         'admin' => [
-            'driver' => 'session',
+            'driver' => 'sanctum',
             'provider' => 'admins',
         ],
     ],

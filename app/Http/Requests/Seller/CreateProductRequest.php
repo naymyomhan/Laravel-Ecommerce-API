@@ -2,15 +2,13 @@
 
 namespace App\Http\Requests\Seller;
 
-use App\Traits\ResponseTrait;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
-class SellerRegisterRequest extends FormRequest
+class CreateProductRequest extends FormRequest
 {
-    use ResponseTrait;
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -27,20 +25,20 @@ class SellerRegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:30|min:3',
-            'email' => 'required|email|unique:sellers,email',
-            'password' => 'required|string|min:8|confirmed',
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            'quantity' => 'required|integer|min:0',
+            'images' => 'nullable|string',
+            'category_id' => 'required|exists:categories,id',
+            'sub_category_id' => 'nullable|exists:sub_categories,id',
+            'brand_id' => 'nullable|exists:brands,id',
+            'tags' => 'nullable|string',
         ];
     }
 
     protected function failedValidation(Validator $validator)
     {
-        // $errors = $validator->errors()->toArray();
-        // $formattedErrors = [];
-        // foreach ($errors as $field => $errorMessages) {
-        //     $formattedErrors[$field] = $errorMessages[0];
-        // }
-
         $response = new JsonResponse([
             'success' => false,
             'message' => $validator->errors()->first(),
